@@ -151,6 +151,16 @@ GGSCI> EDIT PARAMS EXTRACT_NAME
 GGSCI> START EXTRACT extract_config
 GGSCI> INFO EXTRACT extract_config
 ```
+Use Data Pump (or transportable tablespaces / RMAN) for the initial bulk copy.
+If you want to offload work from primary, run the export on a physical standby or use impdp with NETWORK_LINK to stream from the source.
+After the initial load completes and is validated, start GoldenGate extract/replicat to capture and apply ongoing changes.
+Orchestrate both steps with ZDM (configure ZDM to use Data Pump for initial load and GoldenGate for CDC), or run Data Pump manually and configure ZDM/GoldenGate only for CDC.
+# Run import on target, pull data directly from source (no dump files)
+impdp system/Password@TARGET \
+  NETWORK_LINK=SOURCE_TNS_ALIAS \
+  FULL=Y \
+  PARALLEL=8 \
+  TRANSFORM=SEGMENT_ATTRIBUTES:n
 
 ### Target Database - Replicat Configuration
 
@@ -163,6 +173,7 @@ GRANT CONNECT, RESOURCE, DBA TO ggadmin;
 
 #### Create Replicat Process
 
+
 **Parameter File: replicat_config.prm**
 ```
 REPLICAT replicat_config
@@ -173,6 +184,7 @@ MAP scott.emp, TARGET scott.emp;
 MAP scott.dept, TARGET scott.dept;
 ```
 
+  
 **Commands:**
 ```bash
 ./ggsci
